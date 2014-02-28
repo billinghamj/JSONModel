@@ -193,19 +193,58 @@ extern BOOL isNull(id value)
 #pragma mark - string <-> date
 -(NSDate*)__NSDateFromNSString:(NSString*)string
 {
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    string = [string stringByReplacingOccurrencesOfString:@":" withString:@""]; // this is such an ugly code, is this the only way?
-    [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HHmmssZZZZ"];
-    
-    return [dateFormatter dateFromString: string];
+    NSDate *output;
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+
+    // set locale to be the US POSIX standard
+    NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+    [formatter setLocale:locale];
+
+    // long timezone format, with milliseconds
+    // 2014-01-01T12:30:00.000+00:00
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"];
+    output = [formatter dateFromString:string];
+
+    if (output != nil)
+        return output;
+
+    // short timezone format, with milliseconds
+    // 2014-01-01T12:30:00.000Z
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZ"];
+    output = [formatter dateFromString:string];
+
+    if (output != nil)
+        return output;
+
+    // long timezone format, no milliseconds
+    // 2014-01-01T12:30:00+00:00
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZZZ"];
+    output = [formatter dateFromString:string];
+
+    if (output != nil)
+        return output;
+
+    // short timezone format, no milliseconds
+    // 2014-01-01T12:30:00Z
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZ"];
+    output = [formatter dateFromString:string];
+
+    return output;
 }
 
 -(NSString*)__JSONObjectFromNSDate:(NSDate*)date
 {
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZ"];
-    
-    return [dateFormatter stringFromDate:date];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+
+    // set locale to be the US POSIX standard
+    NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+    [formatter setLocale:locale];
+
+    // use most comprehensive format
+    // 2014-01-01T12:30:00.000+00:00
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"];
+
+    return [formatter stringFromDate:date];
 }
 
 @end
